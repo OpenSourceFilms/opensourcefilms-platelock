@@ -152,7 +152,7 @@ Still under active development, published as it stands rather than as a finished
 
 ## Acknowledgments
 
-Development and GPU compute for this project are supported by Runpod, our compute sponsor. The
+Development and GPU compute for this project happen in collaboration with Runpod. The
 Blackwell-class cards this pipeline was built and tuned against came from Runpod pods.
 
 ## License
