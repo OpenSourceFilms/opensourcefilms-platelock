@@ -1,0 +1,40 @@
+mode: bridge_compose_test
+
+input:
+  resize: none
+  frame_range: null
+  pixel_format: rgb
+
+methods:
+  - bridge_compose
+
+bridge_compose:
+  ref_frame: 0          # change to frame with most visible background
+  min_inliers_bridge: 15
+  min_inliers_tracking: 30
+  ransac_thresh: 4.0
+  temporal_sigma: 1.5
+  use_loftr: true
+  use_lightglue: true
+  loftr_outdoor: true
+  sift_n_features: 8000
+
+stmap:
+  export: true
+  format: npy
+
+metrics:
+  compute_lpips: false
+  compute_ssim: true
+  masked_only: false
+  compositing_metrics: true
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 18
+  fps: null
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: true

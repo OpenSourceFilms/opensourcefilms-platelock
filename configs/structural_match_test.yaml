@@ -1,0 +1,33 @@
+methods:
+  - structural_match
+
+structural_match:
+  sift_n_features: 8000
+  representations: ['clahe', 'gradmag', 'dog']
+  ransac_thresh: 4.0
+  min_inliers: 15
+  temporal_sigma: 1.5
+  use_lightglue: true
+  lightglue_max_w: 1600
+  border_reject_px: 15
+  edge_improvement_threshold: 0.90   # accept transform only if edge_score drops by ≥10%
+
+stmap:
+  export: true
+  format: npy
+
+metrics:
+  compute_lpips: false
+  compute_ssim: true
+  masked_only: false
+  compositing_metrics: true
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 18
+  fps: null
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: true

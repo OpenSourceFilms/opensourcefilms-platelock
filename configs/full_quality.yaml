@@ -1,0 +1,78 @@
+# Full quality run - all installed SOTA methods + baselines
+# Tier 1 methods are the production path; Tier 2+ require additional install
+mode: full_quality
+
+input:
+  resize: none
+  frame_range: null
+  pixel_format: rgb
+
+# ── Tier 1: best immediate production results ──────────────────────────────
+# CoTracker3: background grid → RANSAC → piecewise affine mesh → STMap
+# TAPNext++:  same pipeline, swap tracker (needs tapnet install)
+#
+# ── Tier 2: direct orig-clean matcher ─────────────────────────────────────
+# RoMa v2: per-frame learned dense matching → RANSAC → STMap (needs romatch)
+#
+# ── Tier 4: dense flow baselines ──────────────────────────────────────────
+# searaft / flowseek via ptlflow (needs ptlflow install)
+#
+# ── Diagnostics only ──────────────────────────────────────────────────────
+# ecc: sanity check translation lock
+# dual_video: phase-correlation classical baseline
+methods:
+  - cotracker_mesh      # Tier 1 - CoTracker3
+  - tapnext_mesh        # Tier 1 - BootsTAPIR
+  - roma_v2             # Tier 2 - RoMa dense matching
+  - searaft             # ptlflow: SM_120 works on RTX 5090 + torch 2.8+cu128
+  - flowseek            # ptlflow: SM_120 works on RTX 5090 + torch 2.8+cu128
+  - farneback           # classical optical flow baseline
+  - dual_video          # classical baseline
+  - ecc                 # diagnostic only
+
+cotracker_mesh:
+  grid_size: 40         # denser grid for full quality
+  min_vis_ratio: 0.3
+  smooth_trajectories: true
+  tracking_wh: [960, 540]
+  chunk_size: 40
+  overlap: 8
+  per_chunk_seed_ecc: true
+  bg_mask_threshold: 30
+
+ecc:
+  mode: translation
+  num_iterations: 500
+  termination_eps: 1e-6
+  as_prepass: false
+
+ptlflow:
+  model: sea_raft_l
+  iters: 32
+  mixed_precision: false
+
+flow:
+  spatial_blur_px: 0
+  temporal_smooth_radius: 0
+  clamp_p95_multiplier: 0.0
+  blend_with_global: 0.0
+
+stmap:
+  export: true
+  format: npy
+
+metrics:
+  compute_lpips: false
+  compute_ssim: true
+  masked_only: false
+  compositing_metrics: true   # temporal jerk, masked edge alignment, STMap smoothness
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 18
+  fps: null
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: true

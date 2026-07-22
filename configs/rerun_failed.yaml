@@ -1,0 +1,58 @@
+# Re-run of methods that failed in full_run_01:
+#   roma_v2   - was producing identity warps (use_custom_corr=True crash, caught silently)
+#   searaft   - OOM at full 5K res (now capped at 1280px in ptlflow_method.py)
+#   flowseek  - OOM at full 5K res (same fix)
+mode: full_quality
+
+input:
+  resize: none
+  frame_range: null
+  pixel_format: rgb
+
+methods:
+  - roma_v2
+  - searaft
+  - flowseek
+
+cotracker_mesh:
+  grid_size: 40
+  min_vis_ratio: 0.3
+  smooth_trajectories: true
+  tracking_wh: [960, 540]
+
+ecc:
+  mode: translation
+  num_iterations: 500
+  termination_eps: 1e-6
+  as_prepass: false
+
+ptlflow:
+  model: sea_raft_l
+  iters: 32
+  mixed_precision: false
+
+flow:
+  spatial_blur_px: 0
+  temporal_smooth_radius: 0
+  clamp_p95_multiplier: 0.0
+  blend_with_global: 0.0
+
+stmap:
+  export: true
+  format: npy
+
+metrics:
+  compute_lpips: false
+  compute_ssim: true
+  masked_only: false
+  compositing_metrics: true
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 18
+  fps: null
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: true

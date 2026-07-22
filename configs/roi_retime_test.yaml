@@ -1,0 +1,37 @@
+methods:
+  - roi_retime
+
+roi_retime:
+  roi_config: configs/rois/example_shot_rois.json
+  dt_range: 5            # search ±5 frames residual (bulk offset corrected by static pre-correction)
+  dx_range: 35           # search ±35px residual horizontal
+  dy_range: 35           # search ±35px residual vertical (70–120px corrected by ty=100; ±30px residual)
+  work_scale: 0.25       # run NCC at 1/4 res (1280x675 from 5120x2700)
+  transform_mode: retime+translate
+  savgol_window: 11
+  savgol_poly: 3
+  min_confidence: 0.15
+
+  # Stage 1: apply known static correction to clean frames before NCC search.
+  # clean plate is ~3.3% wider (scale≈1.033), sconces ~70–120px higher than in original.
+  # After this correction, residual search only needs to cover small offsets.
+  static_pre_correction:
+    scale: 0.9681       # 1/1.033 - shrinks clean content to match original scale
+    cx: 2560.0          # scale center x (frame width / 2)
+    cy: 1350.0          # scale center y (frame height / 2)
+    tx: 0.0
+    ty: 100.0           # shift clean DOWN 100px (sconces 70–120px too high → midpoint 95; use 100)
+
+stmap:
+  export: true
+  format: npy
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 18
+  fps: null
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: true

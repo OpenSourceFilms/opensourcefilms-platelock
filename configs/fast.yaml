@@ -1,0 +1,47 @@
+# Fast config for quick testing - fewer frames, half-res, fewer models
+mode: fast
+
+input:
+  resize: 960x540
+  frame_range: [0, 30]
+  pixel_format: rgb
+
+methods:
+  - ecc
+  - searaft
+
+ecc:
+  mode: homography
+  num_iterations: 100
+  termination_eps: 1e-4
+  as_prepass: true
+
+ptlflow:
+  model: sea_raft
+  iters: 12
+  mixed_precision: true
+
+flow:
+  spatial_blur_px: 1
+  temporal_smooth_radius: 0
+  clamp_p95_multiplier: 3.0
+  max_flow_px: null
+  blend_with_global: 0.0
+
+stmap:
+  export: false
+
+metrics:
+  compute_lpips: false
+  compute_ssim: false
+  masked_only: false
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 28
+  fps: null
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: false

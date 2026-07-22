@@ -1,0 +1,52 @@
+# Default nightly run - Tier 1 methods + classical baselines
+mode: nightly_default
+
+input:
+  resize: none          # none | 1920x1080 | 1280x720 | WxH
+  frame_range: null     # null = all frames; [0, 120] = first 120 frames
+  pixel_format: rgb
+
+# Tier 1: primary production path
+# Tier 4 baselines (diagnostics only - kept for QC, not final tool)
+methods:
+  - cotracker_mesh      # Tier 1: CoTracker3 tracks → RANSAC → piecewise affine
+  - dual_video          # classical baseline
+  - ecc                 # diagnostic only
+
+cotracker:
+  grid_size: 30
+  min_vis_ratio: 0.3
+  smooth_trajectories: true
+  tracking_wh: [960, 540]
+
+ecc:
+  mode: translation     # demoted to diagnostic - translation only
+  num_iterations: 200
+  termination_eps: 1e-5
+  as_prepass: false
+
+flow:
+  spatial_blur_px: 0
+  temporal_smooth_radius: 0
+  clamp_p95_multiplier: 0.0
+  blend_with_global: 0.0
+
+stmap:
+  export: true
+  format: npy           # npy | exr (exr requires openexr)
+
+metrics:
+  compute_lpips: false
+  compute_ssim: true
+  masked_only: false
+  compositing_metrics: true   # temporal jerk, edge alignment, STMap smoothness
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 23
+  fps: null
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: true

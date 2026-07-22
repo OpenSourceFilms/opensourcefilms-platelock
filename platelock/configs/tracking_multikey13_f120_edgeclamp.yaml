@@ -1,0 +1,130 @@
+# tracking_multikey13.yaml: the tracking-based plate-lock recipe, validated
+# end-to-end on the ExampleShot shot (development name "multikey13", user
+# verdict PASS 2026-07-03). Run via (from the repo root):
+#
+#   python -m platelock.run --config platelock/configs/tracking_multikey13.yaml \
+#       --out output/run_multikey13 [--export-5k]
+#
+# This config is a WORKING EXAMPLE for the ExampleShot shot, self-contained
+# under data/example_shot/ (copied here from the original dev workspace,
+# where the full forensic history/exploration lives).
+# All defaults below are the exact settings that produced the validated
+# result. For a NEW shot: copy this file, point inputs/masks/bootstrap at the
+# new shot's data, and re-sweep cres_blur_sigma (it's shot-dependent).
+
+inputs:
+  original: data/example_shot/input/original/ExampleShot_5K8bit_24fps_Pan_RETIMED_01.mp4
+  clean:    data/example_shot/input/clean/ExampleShot_WAN2700p_24fps_Pan_RETIMED_01.mp4
+
+working:
+  width: 1920          # working resolution width; height derived from source AR
+  # (source 5120x2700 -> 1920x1012)
+
+masks:
+  # per-frame SAM3 exclusion masks: {dir}/orig_mask_f{fr:04d}.png (actor, real
+  # objects, scored on ORIGINAL) and {dir}/clean_mask_f{fr:04d}.png (WAN-invented
+  # elements, scored on CLEAN). Generate via platelock.masks + platelock.segmenters
+  # .sam3_segmenter for a new shot; this path reuses the ones already built for
+  # this shot's RoMa-dense branch.
+  dir: data/example_shot/masks
+
+bootstrap:
+  # ANY already-solved backward map, used ONLY to transfer keyframe seeds from
+  # original-space to clean-space (no new cross-domain matching). On this shot,
+  # the RoMa-dense v2 solve. For a brand-new shot with no prior solve, run a
+  # single-frame RoMa/GIM match at each keyframe instead and feed that in.
+  M: data/example_shot/bootstrap/M_savgol_w7.npy
+  cres: data/example_shot/bootstrap/cres_savgol_w7.npy
+
+tracking:
+  keyframe_stride: 5              # keyframes = every Nth frame + the last frame
+  seed_grid: [56, 32]             # (gx, gy) seed grid per keyframe
+  resolutions:                    # OOM fallback ladder, tried in order
+    - [1920, 1012]
+    - [1440, 758]
+    - [1280, 674]
+  min_run: 9                      # drop track segments shorter than this after screening
+  temporal_window: 15             # per-track savgol window
+  gap_max: 70                     # PCHIP bridge gap limit (frames)
+  wiggle_mult: 3.0                # keep track if 2nd-deriv accel median < overall median * this
+  liar_screen:
+    # per-frame iterative local-consistency screen -- the make-or-break stage.
+    # Catches correspondences wrong for only PART of their lifetime, which no
+    # track-level aggregate threshold can see (found after 3 other fixes for
+    # the same symptom -- hole-pins, occlusion-trust, gap-bridging -- failed).
+    neighbors: 13
+    threshold_px: 40.0
+    iterations: 3
+    min_active: 30
+
+reconstruct:
+  grid: [200, 105]                 # coarse control lattice (gx, gy)
+  neighbors: 320                   # RBF/TPS neighbours
+  smoothing: 2.0
+  max_anchors: 8000
+  boundary: [9, 5]                 # boundary anchor grid pinning residual to ~0 at edge
+  affine_thresh: 3.0                # RANSAC reprojection threshold (px)
+  hole_pin_stride: 128              # affine-pin virtual anchors on this lattice...
+  hole_pin_margin: 100              # ...if further than this from the nearest real anchor
+                                    # (prevents unbounded TPS extrapolation in unsupported holes)
+  temporal_windows: [15, 11]        # joint M+cres savgol, applied in sequence (w15 then w11)
+  cres_blur_sigma: [3.0]                  # PINNED, no sweep (2026-07-13). The auto-sweep's lock
+                                          # metric is computed over only 4 frames / 1 ROI
+                                          # (sigma_check_frames/sigma_check_roi below) -- too narrow
+                                          # an objective to trust unattended. On the max1 tracks it
+                                          # picked sigma=1.5, which re-opened the mobile-distortion
+                                          # ("noodling") regression; the project lead's visual verdict confirmed
+                                          # sigma=3.0 is correct. The sweep list form (multiple
+                                          # values) still works as an OPT-IN for a new shot, but any
+                                          # result it picks MUST be confirmed by eye before shipping --
+                                          # never let the auto-picked value ship silently again.
+  sigma_check_frames: [0, 68, 115, 120]
+  sigma_check_roi: [40, 20, 200, 460]     # used only for the sigma sweep's lock metric
+
+microlock:
+  # per-frame anisotropic pixel-lock against the TRUE original (see
+  # platelock.tracking.microlock module docstring for the aperture-problem
+  # rationale). Pyramid entries are (tiles_x, tiles_y, search_radius_px).
+  clamp_px: 14.0
+  coarse_grid: [48, 26]            # (cw, ch) correction lattice
+  pyramid:
+    - [8, 5, 16]
+    - [8, 5, 16]
+    - [16, 10, 12]
+    - [24, 14, 8]
+    - [32, 20, 6]
+  damping: 0.8
+  temporal_window: 5               # savgol window on the correction sequence
+  min_match_score: 0.35
+  min_tile_std: 3.0
+  curvature_gate: 0.02
+  hole_dilate_px: 151              # actor-mask dilation defining the microlock zero-anchor hole
+
+hole_fill:
+  # method: ring_plane (SHIPPED WINNER, 2026-07-13 -- harmonic was RETIRED
+  # after losing 6 straight visual A/Bs to ring_plane; do not switch this back
+  # to harmonic without a fresh visual verdict). ring_plane (legacy name, but
+  # it is the current mainline fill): fit an affine plane over a wide ring
+  # around the mask and blend it in with a feather, savgol-smoothing the
+  # coefficients over time. See platelock.tracking.hole_fill module docstring
+  # for the full method comparison and harmonic's retirement rationale.
+  method: ring_plane
+  ring_model: affine        # EXPLICIT for feather-isolation experiment 2026-07-15
+  per_component: false     # EXPLICIT for feather-isolation experiment 2026-07-15
+  inner_dilate_px: 61              # trust margin: fill spans mask dilated by this
+  solve_downsample: 4              # Laplace solve grid = working res / this
+  seam_px: 16                      # distance-transform blend width at the hole rim
+  interior_temporal_window: 11     # savgol window on the /4 interior solutions (v3 hybrid)
+  interior_ramp_start_px: 24       # px inside the rim where temporal smoothing starts
+  interior_ramp_len_px: 90         # ramp length to full interior smoothing
+  # --- ring_plane (legacy) parameters ---
+  outer_dilate_px: 241
+  feather_px: 120
+  ring_samples: 4000
+  coeff_temporal_window: 9         # savgol window on the plane's 6 coefficients
+
+edge_clamp:                 # the project lead 2026-07-16: clamp warp extrapolation beyond track coverage (right edge)
+  enabled: true
+  cov_percentile: 99.5      # robust right coverage boundary from valid tracks
+  band_px: 120              # smoothstep width from full residual to affine-only
+  temporal_window: 11       # savgol on the boundary so the clamp line can't flicker

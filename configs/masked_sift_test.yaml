@@ -1,0 +1,31 @@
+methods:
+  - masked_sift
+
+masked_sift:
+  diff_threshold: 55      # pixels where |orig-clean| > this are masked out (actor/AI regions)
+  mask_dilate_px: 40      # dilation kernel - errs on the side of masking more
+  min_inliers: 15         # minimum SIFT inliers to accept a frame's homography
+  sift_n_features: 8000
+  ransac_thresh: 4.0
+  temporal_sigma: 1.5     # gaussian smoothing over time to reduce frame-to-frame jitter
+  use_gradient: true      # gradient magnitude + CLAHE (color-invariant); false = raw CLAHE gray
+
+stmap:
+  export: true
+  format: npy
+
+metrics:
+  compute_lpips: false
+  compute_ssim: true
+  masked_only: false
+  compositing_metrics: true
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 18
+  fps: null
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: true

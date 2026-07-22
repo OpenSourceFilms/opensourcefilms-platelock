@@ -1,0 +1,98 @@
+# dense_crux_masked.yaml - SAM3 mask-exclusion variant of dense_crux.yaml (2026-07-02).
+# Forked from the frozen dense_crux.yaml baseline; reconstruction params here now
+# DIVERGE from dense_crux.yaml in one place: reconstruct.neighbors (see below).
+# masks.enabled: true is the other difference. Never edit dense_crux.yaml itself -
+# it stays the frozen, byte-for-byte historical baseline.
+#
+# reconstruct.neighbors 64->256 (2026-07-02): diagnosed a real "wave-distort" wobble
+# on a window's vertical mullion (frames ~57-96, worst ~f68-76), visually confirmed
+# in the exported 5K output by the user. Root cause: RBF/TPS residual fit smoothing
+# across what is almost certainly a real depth/plane discontinuity (window recessed
+# from wall) with too FEW neighbours - the fit was UNDER-constrained there, not
+# over-blended (the opposite of the initial hypothesis: reducing neighbors to 16/32
+# made both temporal stability AND fold% measurably WORSE, not better). Swept
+# neighbors 16/32/64/96/128/192/256 on frames 68/72/76/80: fold% dropped monotonically
+# (64:1.22% -> 256:0.02%), mullion-point temporal std improved (10.32->9.29), and the
+# S-curve was visibly straighter at 256 in direct render comparison (not just the
+# proxy metric). No regression on f35/left_window/sconce_support/right_window at
+# f35/115/120 (all flat or improved). smoothing (2/6/12) had negligible effect at
+# any neighbors value - not the active lever, left at 2.0.
+
+inputs:
+  original: input/original/ExampleShot_5K8bit_24fps_Pan_RETIMED_01.mp4
+  clean:    input/clean/ExampleShot_WAN2700p_24fps_Pan_RETIMED_01.mp4
+  # CoTracker comparison baseline (validator/fallback only, never mainline)
+  cotracker: output/sweep_all_01/cotracker_mesh/previews/warped_clean.mp4
+
+working:
+  width: 1920          # working resolution width; height derived from source AR
+  # (source 5120x2700 -> 1920x1012)
+
+roma:
+  provider: roma_outdoor
+  use_custom_corr: false
+  coarse_res: 560
+  upsample_res: 864    # internal RoMa res; higher-res sweep is a LATER lever
+
+anchors:
+  cert_thresh: 0.3           # filter_anchors thresh
+  roi_balanced:
+    tiles: [8, 5]            # spatial tile grid (tx, ty)
+    frac: 0.05               # keep top 5% by certainty within each tile
+    max_total: 5000
+
+affine:
+  ransac_thresh: 3.0         # fit_affine reproj threshold (px)
+
+reconstruct:
+  grid: [160, 84]            # coarse control lattice (gx, gy)
+  neighbors: 256             # RBF neighbours (was 64; see header note re: middle-window wobble fix)
+  smoothing: 2.0             # TPS smoothing (crux-winning value; unaffected by the neighbors fix)
+  max_anchors: 5000
+  boundary: [7, 4]           # boundary anchor grid pinning residual to ~0 at edge
+
+temporal:
+  # Smooth AFFINE params + residual control-grid dx/dy only, never pixels.
+  # reject-before-smooth for bad frames (low anchors / high fold / degenerate).
+  # Chosen from the 110-120 sweep (output/temporal_sweep_110_120/sweep.json):
+  # w7 cut jitter 10.1->1.42 (86%) and folds 0.0065->0.0027, at -0.04 mean lock
+  # that is entirely lucky-peak clipping (variance reduction, NOT lag) - visually
+  # confirmed on cmp_f113/f120_w7.jpg: steady solid lock every frame, no drag.
+  enabled: true
+  savgol_window: 7           # sweep tested 5/7/9; w7 = sweet spot (w5 same lock
+                             # more jitter; w9 over-smooths lock for less gain)
+  savgol_polyorder: 2
+
+crux:
+  frames: [110, 112, 114, 115, 116, 118, 120]
+  metric: gradient_ncc
+  # generous fixed ROIs (contain the structure across the 10-frame pan @ 1920x1012)
+  rois:
+    left_window:    [20, 20, 280, 500]
+    sconce_support: [460, 160, 220, 230]
+    right_window:   [1080, 320, 280, 320]
+    # added 2026-07-02: previously uncovered gap between sconce_support and
+    # right_window - exactly where the wave-distort mullion wobble was found.
+    # CORRECTION: this box is mostly occupied by the ACTOR's face/head in the
+    # ORIGINAL at frames ~60-90 (he stands directly in front of this window).
+    # The "RAW" and "orig" panels of crux_middle_window.mp4 are therefore NOT
+    # meaningful here (comparing "has an actor" original vs "has no actor"
+    # clean plate always looks mismatched by design) - what this ROI actually
+    # diagnoses is PAINT-THROUGH FILL QUALITY: the field interpolated across
+    # the actor's exclusion mask, using only surrounding anchors, with no
+    # direct correspondence of its own. Judge this ROI by watching the DENSE
+    # panel alone across consecutive frames for wobble, not by RAW/orig match.
+    middle_window:  [620, 100, 280, 320]
+
+# masks: SAM3 exclusion masks - orthogonal to the frozen reconstruction params above.
+# orig_mask (actor + real dim sconce, from ORIGINAL) excludes anchors/metric in
+# ORIGINAL coords. clean_mask (WAN-invented flame/sconce glow, from CLEAN) excludes
+# anchors in CLEAN coords. The two are never combined into one frame's coord space.
+masks:
+  enabled: true             # THIS is the only difference from dense_crux.yaml
+  checkpoint: models/sam3/sam3.pt  # or set PLATELOCK_SAM3_CHECKPOINT
+  actor_prompts: ["person"]              # scored on ORIGINAL; max_area_frac=1.0 (actor can dominate frame)
+  orig_concept_prompts: ["wall sconce"]  # real dim sconce, scored on ORIGINAL
+  clean_concept_prompts: ["wall sconce", "flame"]  # WAN-invented glow, scored on CLEAN
+  concept_max_area_frac: 0.05    # small-fixture guard (does NOT catch low-confidence blobs, see concept_conf_thresh)
+  concept_conf_thresh: 0.65      # confirmed 2026-07-02: drops the f120 low-conf (0.609) blob, keeps all real detections (min 0.773 elsewhere)

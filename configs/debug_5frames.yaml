@@ -1,0 +1,46 @@
+# Debug config - 5 frames only, fast, verbose
+mode: debug
+
+input:
+  resize: 960x540
+  frame_range: [0, 5]
+  pixel_format: rgb
+
+methods:
+  - ecc
+  - searaft
+
+ecc:
+  mode: affine
+  num_iterations: 50
+  termination_eps: 1e-4
+  as_prepass: true
+
+ptlflow:
+  model: sea_raft
+  iters: 8
+  mixed_precision: true
+
+flow:
+  spatial_blur_px: 0
+  temporal_smooth_radius: 0
+  clamp_p95_multiplier: 3.0
+  max_flow_px: null
+  blend_with_global: 0.0
+
+stmap:
+  export: true
+  format: npy
+
+metrics:
+  compute_lpips: false
+  compute_ssim: true
+
+previews:
+  generate: true
+  codec: libx264
+  crf: 28
+
+output:
+  stills_at: [first, middle, last]
+  keep_flow_npy: true

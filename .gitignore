@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+env/
+.venv/
+venv/
+
+# Local tool caches / indexes
+.cache/
+.rtfm/
+.claude/
+.ipynb_checkpoints/
+
+# Runtime data: this repo ships pipeline code only
+output/
+input/
+logs/
+repos/
+vendor/
+data/
+
+# Claude Code settings files can carry plaintext API keys in the env block,
+# never stage/commit these or a backup/proposed variant of one
+settings.json
+settings.json.*
