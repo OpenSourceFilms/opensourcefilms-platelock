@@ -56,7 +56,9 @@ class CoTrackerMeshMethod:
         if self.model is not None:
             return
         logger.info("Loading CoTracker3 from torch hub...")
-        self.model = torch.hub.load("facebookresearch/co-tracker", "cotracker3_offline")
+        # Pinned to the commit verified in setup_env.sh / production so an upstream push
+        # can't silently change tracking output.
+        self.model = torch.hub.load("facebookresearch/co-tracker:82e02e8", "cotracker3_offline")
         self.model.to(self.device).eval()
         logger.info("CoTracker3 loaded on %s", self.device)
 

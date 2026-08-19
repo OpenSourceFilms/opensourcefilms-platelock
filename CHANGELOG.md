@@ -1,5 +1,29 @@
 # Changelog
 
+## [Unreleased] - 2026-08-19
+
+Deployment-presence pass: a tested, reproducible Runpod setup path. No functional or quality
+changes to the pipeline itself.
+
+### Added
+
+- `RUNPOD.md`: recommended GPU class, dependency reproducibility notes, persistent-volume
+  guidance, and a "Run on Runpod" section in `README.md`.
+- `requirements.lock.txt`: pins the benchmark harness's direct Python dependencies to versions
+  verified by a real fresh-environment install and smoke test (`ecc`, `searaft`, `cotracker_mesh`
+  all ran end-to-end and produced expected output artifacts).
+
+### Changed
+
+- `scripts/setup_env.sh`: pins `torch`/`torchvision` to the versions already verified in
+  production (`2.8.0`/`0.23.0`, cu128), drops the unused `torchaudio` install, installs from
+  `requirements.lock.txt` instead of an inline package list, and pins the CoTracker3 clone to a
+  specific verified commit (`82e02e8`) instead of tracking `main`.
+- `scripts/methods/cotracker_mesh.py`: pins the `torch.hub.load` CoTracker3 reference to the same
+  commit, so an upstream push can't silently change tracking output.
+- `README.md`: removed the "no pinned dependency lock file" line from Known limitations (now
+  addressed).
+
 ## [0.1.0] - 2026-07-22
 
 Initial release. Work in progress, published as it stands.

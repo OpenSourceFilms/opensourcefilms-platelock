@@ -90,6 +90,14 @@ Compositing-appropriate metrics (`scripts/utils/compositing_metrics.py`):
 Development targeted an NVIDIA RTX PRO Blackwell card (sm_120). System torch builds tied to older
 CUDA versions cannot run on sm_120; `scripts/setup_env.sh` creates a fresh venv with cu128 PyTorch.
 
+## Run on Runpod
+
+This pipeline was built and tuned on Runpod GPU pods. `scripts/setup_env.sh` and
+`requirements.lock.txt` give a pinned, tested setup path; `RUNPOD.md` has the full deployment
+guide, including recommended GPU class, dependency reproducibility details, persistent-volume
+guidance, and an honest record of what's actually been validated (and what hasn't, such as GPU
+execution when the sandbox doing the validating had no GPU attached).
+
 ## Nuke STMap convention
 
 STMaps are exported as `.npy` float32 arrays (H x W x 2).
@@ -144,8 +152,6 @@ This is a code-only export from an internal working directory. Deliberately excl
 
 Still under active development, published as it stands rather than as a finished deliverable.
 
-- No pinned dependency lock file. `scripts/setup_env.sh` and `reinstall_deps.sh` install what's
-  needed, but versions aren't pinned yet.
 - The benchmark harness (`scripts/`) and the production pipeline (`platelock/`) are related but
   separate systems that grew somewhat independently; some duplication between them hasn't been
   reconciled.
@@ -153,7 +159,8 @@ Still under active development, published as it stands rather than as a finished
 ## Acknowledgments
 
 Development and GPU compute for this project happen in collaboration with Runpod. The
-Blackwell-class cards this pipeline was built and tuned against came from Runpod pods.
+Blackwell-class cards this pipeline was built and tuned against came from Runpod pods. See
+`RUNPOD.md` for a tested setup path on a Runpod pod.
 
 ## License
 

@@ -42,8 +42,10 @@ echo "============================================"
 echo "Step 5: Upgrade pip + install PyTorch cu128"
 echo "============================================"
 pip install --upgrade pip --quiet
-# PyTorch >= 2.7 compiled for CUDA 12.8 — required for Blackwell sm_120
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+# Pinned to the versions verified working (2026-08-19, and previously in production on
+# 2026-08-06): CUDA 12.8 build, required for Blackwell sm_120. torchaudio dropped — nothing
+# in this repo imports it.
+pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu128
 
 echo
 echo "============================================"
@@ -60,23 +62,19 @@ echo
 echo "============================================"
 echo "Step 7: Install Python packages"
 echo "============================================"
-pip install \
-    ptlflow \
-    "opencv-python-headless>=4.9" \
-    numpy scipy scikit-image \
-    imageio "imageio-ffmpeg>=0.4.9" \
-    tqdm pandas matplotlib \
-    kornia einops timm \
-    huggingface_hub safetensors \
-    pyyaml
+pip install -r "$ROOT/requirements.lock.txt"
 
 echo
 echo "============================================"
 echo "Step 8: Clone CoTracker3"
 echo "============================================"
 mkdir -p "$REPOS"
+# Pinned to the commit already verified in production (see platelock/tracking/track.py in
+# the mainline pipeline) so an upstream push can't silently change tracking output here too.
+COTRACKER_COMMIT="82e02e8"
 if [ ! -d "$REPOS/co-tracker" ]; then
     git clone https://github.com/facebookresearch/co-tracker "$REPOS/co-tracker"
+    (cd "$REPOS/co-tracker" && git checkout --quiet "$COTRACKER_COMMIT")
 else
     echo "co-tracker already cloned, skipping"
 fi
