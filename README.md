@@ -34,6 +34,25 @@ For the production tracking pipeline (the more developed path, config-driven):
 python -m platelock.run --config platelock/configs/tracking_multikey13.yaml --out output/run_example
 ```
 
+### Smoke testing and acceptance boundaries
+
+`bash scripts/smoke_test.sh` generates five synthetic original/clean image
+pairs in a **new** `output/smoke_tests/run_*/` directory for each invocation.
+It runs ECC, SEA-RAFT and CoTracker mesh and exits **nonzero** if any method
+fails or omits native `method_result.json` metadata for the expected five
+frames. Earlier versions printed `FAIL` but could still exit zero, so
+automation should use the current wrapper's process status.
+
+This is a **real model/GPU-dependent integration test**. It can require large
+weights, CUDA and separately licensed tracking models; it is not executed
+by the public CI workflow. A PASS demonstrates that all three methods
+returned the expected metadata, not that STMaps are visually acceptable.
+
+Public CI runs only `bash -n` and seven synthetic command-stub tests from
+`tests/test_smoke_wrapper.py`, requiring no original footage, models,
+Python packages or GPU. Those tests verify that the wrapper fails closed
+on incomplete output and preserves distinct run directories.
+
 ## Method tiers (benchmark harness)
 
 | Tier | Method | Type | Status | Notes |

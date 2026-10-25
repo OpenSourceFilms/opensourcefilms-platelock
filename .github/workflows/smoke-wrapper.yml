@@ -1,0 +1,35 @@
+name: PlateLock smoke wrapper contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/smoke-wrapper.yml"
+      - "scripts/smoke_test.sh"
+      - "tests/test_smoke_wrapper.py"
+  pull_request:
+    paths:
+      - ".github/workflows/smoke-wrapper.yml"
+      - "scripts/smoke_test.sh"
+      - "tests/test_smoke_wrapper.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: smoke-wrapper-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  wrapper-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Check Bash syntax
+        run: bash -n scripts/smoke_test.sh
+      - name: Exercise wrapper contracts using synthetic command stubs
+        run: python -B -m unittest discover -s tests -p "test_smoke_wrapper.py" -v
