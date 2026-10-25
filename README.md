@@ -7,6 +7,12 @@ This is a work in progress. The core pipeline (tracking, reconstruction, microlo
 STMap export) is built and has shipped real deliverables, but it's still under active development.
 Expect rough edges.
 
+## Upstream technology and OSF's contribution
+
+**PlateLock is an integration and VFX-registration pipeline, not an original tracking model.** Its correspondence and mask-estimation branches use independent third-party research and software, including [CoTracker3 (Meta)](https://github.com/facebookresearch/co-tracker), [TAPNext / TAPIR (Google DeepMind)](https://github.com/google-deepmind/tapnet), [RoMa](https://github.com/Parskatt/RoMa), [SEA-RAFT](https://github.com/princeton-vl/SEA-RAFT), and Meta's SAM family where configured. Classical OpenCV algorithms and Nuke's STMap conventions also underpin the workflow.
+
+OSF's contribution is the **application, integration and engineering around these existing components**: combining correspondences with robust fitting, temporal microlock, occlusion handling, STMap export, diagnostics and reproducible tests. OSF does not claim to have developed the upstream trackers, models or algorithms. **The MIT licence applies only to OSF-authored repository code.** Some dependencies, notably CoTracker3, have non-commercial restrictions; check the actual deployed model and [third-party licence review](THIRD_PARTY_LICENSES.md) before commercial use.
+
 ## Quick start
 
 ```bash
