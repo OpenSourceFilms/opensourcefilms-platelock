@@ -43,11 +43,30 @@ def feather(mask: np.ndarray, px: int):
 
 
 def save_mask(path: str, mask: np.ndarray):
-    """Save bool mask as single-channel PNG (0/255) atomically."""
-    mask_u8 = mask.astype(np.uint8) * 255 if mask.dtype == bool else mask.astype(np.uint8)
+    """Save a 2D bool, 8-bit, or normalized float mask as a grayscale PNG.
+
+    ComfyUI-style float masks use [0,1], not [0,255]. Converting those
+    directly to uint8 destroys all foreground values below 1.0. The loader
+    deliberately produces a binary mask using a 127/255 threshold.
+    """
+    if mask.ndim != 2:
+        raise ValueError("mask must be a two-dimensional array")
+    if np.issubdtype(mask.dtype, np.bool_):
+        mask_u8 = mask.astype(np.uint8) * 255
+    elif mask.dtype == np.uint8:
+        # Accept existing 0..255 grayscale masks. Also support binary 0/1
+        # integer masks, which otherwise reload as entirely empty.
+        mask_u8 = mask * 255 if not np.any(mask > 1) else mask
+    elif np.issubdtype(mask.dtype, np.floating):
+        if not np.isfinite(mask).all() or np.any((mask < 0) | (mask > 1)):
+            raise ValueError("float masks must contain finite values in [0,1]")
+        mask_u8 = np.rint(mask * 255).astype(np.uint8)
+    else:
+        raise TypeError("mask must have bool, uint8, or floating-point dtype")
     root, ext = os.path.splitext(path)
     tmp = f"{root}.tmp{ext}"
-    cv2.imwrite(tmp, mask_u8)
+    if not cv2.imwrite(tmp, mask_u8):
+        raise OSError(f"Failed to write mask PNG to {tmp}")
     os.replace(tmp, path)
 
 
