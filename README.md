@@ -13,6 +13,19 @@ Expect rough edges.
 
 OSF's contribution is the **application, integration and engineering around these existing components**: combining correspondences with robust fitting, temporal microlock, occlusion handling, STMap export, diagnostics and reproducible tests. OSF does not claim to have developed the upstream trackers, models or algorithms. **The MIT licence applies only to OSF-authored repository code.** Some dependencies, notably CoTracker3, have non-commercial restrictions; check the actual deployed model and [third-party licence review](THIRD_PARTY_LICENSES.md) before commercial use.
 
+## Synthetic before/after registration demonstration
+
+![Illustrative PlateLock synthetic original, shifted copy and registered copy](docs/registration_synthetic.svg)
+
+The illustration is a **synthetic schematic**, not a frame from LifeR.
+For actual pixel output, run the [CPU-only registration demo](docs/try-registration-demo.md).
+It generates a three-panel PNG from invented graphics, deliberately shifts
+them, then uses **PlateLock's real backward-map functions** to restore their
+alignment. The known +16/-10 pixel translation has zero mean absolute pixel
+error after correction in a conservative interior crop. This verifies map
+direction on an easy known transform, **not** real-world tracked registration,
+complex camera motion or temporal stability.
+
 ## Quick start
 
 ```bash

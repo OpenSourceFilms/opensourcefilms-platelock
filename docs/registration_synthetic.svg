@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+viewBox="0 0 744 200" role="img" aria-labelledby="title desc">
+<title id="title">Synthetic PlateLock registration: original, shifted clean, locked clean</title>
+<desc id="desc">Illustrative vector diagram of a known plus sixteen pixel X and minus ten pixel Y translation. The runnable demonstration uses the actual PlateLock backward-map implementation and exports pixel-based PNG evidence. This static diagram is not production footage or a model result.</desc>
+<defs>
+  <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+    <path d="M24 0H0V24" fill="none" stroke="#45636b" stroke-width="1"/>
+  </pattern>
+  <g id="synthetic-art">
+    <rect x="35" y="30" width="77" height="77" fill="#d8b17c"/>
+    <rect x="48" y="43" width="51" height="49" fill="none" stroke="#583c19" stroke-width="3"/>
+    <text x="47" y="72" fill="white" font-family="sans-serif" font-size="12">SYNTH</text>
+    <circle cx="163" cy="66" r="35" fill="#e6d4b3"/>
+    <circle cx="163" cy="66" r="24" fill="#688c6b"/>
+    <path d="M163 66L182 48" stroke="#e4bea0" stroke-width="4"/>
+  </g>
+  <clipPath id="panel1"><rect width="236" height="132" x="0" y="43"/></clipPath>
+  <clipPath id="panel2"><rect width="236" height="132" x="248" y="43"/></clipPath>
+  <clipPath id="panel3"><rect width="236" height="132" x="496" y="43"/></clipPath>
+</defs>
+<rect width="744" height="200" fill="#f2f4f3"/>
+<g font-family="sans-serif" font-size="13" fill="#203440" font-weight="bold">
+  <text x="3" y="28">SYNTHETIC ORIGINAL</text>
+  <text x="251" y="28">MISALIGNED COPY</text>
+  <text x="499" y="28">PLATELOCK REGISTERED</text>
+</g>
+<g clip-path="url(#panel1)">
+  <rect x="0" y="43" width="236" height="132" fill="#374030"/>
+  <rect x="0" y="43" width="236" height="132" fill="url(#grid)"/>
+  <use xlink:href="#synthetic-art" transform="translate(0 43)"/>
+</g>
+<g clip-path="url(#panel2)">
+  <rect x="248" y="43" width="236" height="132" fill="#374030"/>
+  <rect x="248" y="43" width="236" height="132" fill="url(#grid)"/>
+  <use xlink:href="#synthetic-art" transform="translate(264 33)"/>
+</g>
+<g clip-path="url(#panel3)">
+  <rect x="496" y="43" width="236" height="132" fill="#374030"/>
+  <rect x="496" y="43" width="236" height="132" fill="url(#grid)"/>
+  <use xlink:href="#synthetic-art" transform="translate(496 43)"/>
+</g>
+<text x="6" y="191" font-family="monospace" font-size="10" fill="#51606b">SYNTHETIC VECTOR SCHEMATIC. For actual pixel output, run examples/synthetic_registration_demo.py.</text>
+</svg>
