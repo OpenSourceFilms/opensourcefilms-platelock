@@ -87,7 +87,7 @@ on incomplete output and preserves distinct run directories.
 For a dated account of what has actually been tested, including input
 dimensions, frame counts, CPU-only results and **unmeasured GPU VRAM/runtime**,
 see the [tested-environments and evidence register](docs/tested-environments.md).
-A installed CUDA build or synthetic CI pass must not be mistaken for
+An installed CUDA build or synthetic CI pass must not be mistaken for
 GPU inference or production image-quality acceptance.
 
 ## Method tiers (benchmark harness)
