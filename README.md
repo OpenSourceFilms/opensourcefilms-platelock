@@ -156,15 +156,32 @@ execution when the sandbox doing the validating had no GPU attached).
 
 ## Nuke STMap convention
 
-STMaps are exported as `.npy` float32 arrays (H x W x 2).
+The canonical implementation is [`platelock/geometry.py`](platelock/geometry.py).
+For images with width **W** and height **H** (both at least 2 pixels),
+its normalized, float32 backward STMap is **H × W × 2** in memory:
 
-- **Backward map**: for each *output* pixel, stores the UV coordinate to sample from the source.
-- **U** (channel 0) = source X / W, range [0, 1], left to right.
-- **V** (channel 1) = 1 minus (source Y / H), a V-flip since Nuke's origin is bottom-left.
-- Use R=U, G=V in Nuke's STMap node.
+- **Backward map**: for every output pixel **(x, y)** in original-plate
+  coordinates, `map_x[y, x]` and `map_y[y, x]` give the source
+  coordinates to sample from the clean plate.
+- **U / R** (channel 0) = `map_x / (W - 1)`.
+- **V / G** (channel 1) = `1 - map_y / (H - 1)` with the Nuke
+  bottom-left origin (the default for `backward_map_to_stmap`).
+  The optional top-left origin uses `map_y / (H - 1)`.
+- The endpoint convention maps source pixel centres `x=0` and
+  `x=W-1` to U=0 and U=1 respectively. Similarly, the first
+  and last source rows map to V=1 and V=0 in bottom-left mode.
+- **Do not substitute W or H for W-1 or H-1** when implementing
+  this repository's mapping. Coordinates outside the source image
+  may produce U/V values outside [0, 1]; the exporter does not
+  guarantee clamping.
 
-To use in Nuke: load the `.npy`, write to a 16/32-bit EXR (R=U, G=V), connect to an STMap node, use
-as Source, apply to the clean plate.
+`write_stmap_npy` writes the two-channel float32 array to `.npy`;
+`write_stmap_exr` writes a 32-bit float RGB EXR with R=U, G=V, B=0.
+Use the EXR R/G channels as the mapping input to Nuke's STMap
+node to remap the clean plate into original-plate coordinates.
+**Nuke node-level visual and off-by-half-pixel acceptance remains unverified**
+by the public synthetic tests; validate the convention in the actual
+compositing project before relying on final output.
 
 ## Adding new methods
 
