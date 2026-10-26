@@ -5,9 +5,13 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 import cv2
 import numpy as np
-from platelock import geometry
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from platelock import geometry  # noqa: E402
 
 H, W, INNER = 132, 236, 24
 SHIFT_X, SHIFT_Y = 16, -10
