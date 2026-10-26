@@ -26,6 +26,23 @@ error after correction in a conservative interior crop. This verifies map
 direction on an easy known transform, **not** real-world tracked registration,
 complex camera motion or temporal stability.
 
+### Mask PNG input contract
+
+`platelock.masks.save_mask()` now accepts **2D boolean masks**, 8-bit
+grayscale masks (including binary 0/1 arrays), and normalized floating-point
+masks in **[0, 1]**. Float samples are scaled to the PNG's 0..255 range
+before writing; direct float-to-uint8 casting would otherwise erase most
+foreground values. Non-finite or out-of-range floats, unexpected dtypes and
+multichannel arrays are rejected before the destination is replaced.
+
+`load_mask()` remains a **binary** loader (`>127` on decoded 8-bit
+grayscale); it does not return original soft-matte values. The output path
+is still replaced when saving an existing filename. Use unique destinations
+for independently approved matte versions.
+
+Seven synthetic CPU-only I/O tests run in GitHub Actions with pinned NumPy
+and OpenCV, without any models or private source plates.
+
 ## Quick start
 
 ```bash
