@@ -7,11 +7,15 @@ on:
       - ".github/workflows/smoke-wrapper.yml"
       - "scripts/smoke_test.sh"
       - "tests/test_smoke_wrapper.py"
+      - "examples/synthetic_registration_demo.py"
+      - "tests/test_synthetic_registration_demo.py"
   pull_request:
     paths:
       - ".github/workflows/smoke-wrapper.yml"
       - "scripts/smoke_test.sh"
       - "tests/test_smoke_wrapper.py"
+      - "examples/synthetic_registration_demo.py"
+      - "tests/test_synthetic_registration_demo.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -33,3 +37,20 @@ jobs:
         run: bash -n scripts/smoke_test.sh
       - name: Exercise wrapper contracts using synthetic command stubs
         run: python -B -m unittest discover -s tests -p "test_smoke_wrapper.py" -v
+
+  synthetic-visual-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install synthetic-geometry dependencies only
+        run: python -m pip install "numpy==2.2.6" "opencv-python-headless==4.11.0.86"
+      - name: Test generated registration pixels and safety
+        run: python -B -m unittest discover -s tests -p "test_synthetic_registration_demo.py" -v
+      - name: Render independently executable preview
+        run: python -B examples/synthetic_registration_demo.py --out /tmp/platelock-demo-ci.png
