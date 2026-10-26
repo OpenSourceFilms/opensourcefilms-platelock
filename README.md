@@ -42,6 +42,18 @@ python -m platelock.run --config platelock/configs/tracking_multikey13.yaml --ou
 
 ### Smoke testing and acceptance boundaries
 
+**Recorded clean-environment smoke, 19 August 2026 (historical):**
+a fresh virtual environment with the pinned cu128 PyTorch and harness
+dependencies completed the five-frame `ecc`, `searaft` and
+`cotracker_mesh` methods and wrote the expected metrics and previews.
+All three actually executed on **CPU fallback** because that test host had
+no NVIDIA GPU attached. The setup and individual results were documented
+at the time in [RUNPOD.md, Validation](RUNPOD.md#validation-this-pass-2026-08-19).
+This was a real integration test, unlike the lightweight synthetic-stub
+CI, but **it is not new execution, CUDA validation, measured VRAM usage,
+runtime benchmarking or visual-quality acceptance**. The GPU smoke and
+representative production tracking evaluation remain outstanding.
+
 `bash scripts/smoke_test.sh` generates five synthetic original/clean image
 pairs in a **new** `output/smoke_tests/run_*/` directory for each invocation.
 It runs ECC, SEA-RAFT and CoTracker mesh and exits **nonzero** if any method
